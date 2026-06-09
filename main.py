@@ -2,12 +2,25 @@ import telebot
 from telebot import types
 import sqlite3
 import requests
+from threading import Thread
+import time
+
+# 🌐 Render ሰርቨሩ እንዳይዘጋ የሚረዳ አጭር የዌብ ሰርቨር ኮድ (Flask)
+from flask import Flask
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Hamsa Bot is Active and Running! 🚀"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=10000)
 
 # 1. ቦቱን ማገናኘት
 TOKEN = '8976518823:AAE-GfrDj0gE7tzO37_0Zsbf1UqXwVrJoOM'
 bot = telebot.TeleBot(TOKEN)
 
-# ⚙️ የቢዝネス ዋና መረጃዎች
+# ⚙️ የቢዝነስ ዋና መረጃዎች
 ADMIN_ID = 7313131722 
 CHANNEL_USERNAME = -1003969323110  
 TELEBIRR_NUMBER = '0993121302'       
@@ -30,7 +43,7 @@ def upload_photo_to_link(file_id):
         print(f"Photo upload error: {e}")
     return file_id
 
-# 2. የ SQLite ዳታቤዝ (ለ Pydroid 3 እንዲስማማ የተስተካከለ መገኛ)
+# 2. የ SQLite ዳታቤዝ
 def init_db():
     conn = sqlite3.connect('hamsa_coin_v5_0.db')
     cursor = conn.cursor()
@@ -443,8 +456,20 @@ def process_receipt(message):
         bot.send_message(message.chat.id, STRINGS[lang]['receipt_error'])
         bot.register_next_step_handler(message, process_receipt)
 
-# 🚀 የፖሊንግ ማስነሻ
+# 🚀 የሰርቨር እና የቦት ማስነሻ
 if __name__ == '__main__':
     print("ቦቱ ስራ ጀምሯል...")
+    
+    # 1. የ Flask ሰርቨሩን በጀርባ ማስነሳት
+    t = Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+    
+    # 2. የቴሌግራም ቦቱን ማስነሳት
     bot.remove_webhook()
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            bot.polling(none_stop=True, timeout=60, long_polling_timeout=60)
+        except Exception as e:
+            print(f"Bot polling error: {e}")
+            time.sleep(5)
